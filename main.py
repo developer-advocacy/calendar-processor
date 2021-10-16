@@ -2,20 +2,24 @@
 import datetime
 import os
 
-import googleapiclient.discovery
 import pytz
-from googleapiclient.discovery import build
-import googlecalendar
+
 import auth
+from google import sheets, calendar
 
 
 def main():
+    scopes = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/calendar']
     desktop = os.path.join(os.environ['HOME'], 'Desktop', 'google-auth')
     credentials = auth.authenticate(os.path.join(desktop, 'token.json'),
-                                    os.path.join(desktop, 'authenticated-token.json'))
+                                    os.path.join(desktop, 'authenticated-token.json'),
+                                    scopes)
     assert credentials is not None, 'the credentials must be valid!'
-    service: googleapiclient.discovery.Resource = build('calendar', 'v3', credentials=credentials)
-    my_calendar = googlecalendar.GoogleCalendar(service)
+    my_sheet: sheets.GoogleSheet = sheets.GoogleSheet(credentials,
+                                                      os.environ['SHEET_ID'])
+    print(my_sheet.read_values('A1:C6'))
+
+    my_calendar: calendar.GoogleCalendar = calendar.GoogleCalendar(credentials)
     tz = pytz.timezone('America/Los_Angeles')
     start = datetime.datetime(year=2021, month=10, day=15, hour=17, minute=33, second=32)
     stop = datetime.datetime(year=2021, month=10, day=15, hour=19, minute=2, second=0)

@@ -2,8 +2,10 @@ import datetime
 import typing
 
 import googleapiclient.discovery
+from google.oauth2.credentials import Credentials
 
 import pytz
+from googleapiclient.discovery import build
 
 
 def build_valid_tz(tz: typing.Union[str, datetime.tzinfo]) -> bool:
@@ -18,8 +20,9 @@ def build_valid_tz(tz: typing.Union[str, datetime.tzinfo]) -> bool:
 
 class GoogleCalendar(object):
 
-    def __init__(self, service: googleapiclient.discovery.Resource):
-        self.service = service
+    def __init__(self, credentials: Credentials):
+        self.service: googleapiclient.discovery.Resource = build('calendar', 'v3',
+                                                                 credentials=credentials)
 
     def get_events_between(self,
                            start: datetime.datetime,
