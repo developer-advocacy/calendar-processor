@@ -16,7 +16,7 @@ def build_valid_tz(tz: typing.Union[str, datetime.tzinfo]) -> bool:
     return ntz
 
 
-class Calendar(object):
+class GoogleCalendar(object):
 
     def __init__(self, service: googleapiclient.discovery.Resource):
         self.service = service
@@ -39,6 +39,12 @@ class Calendar(object):
         events_result = self.service.events().list(**dict_of_args).execute()
         events = events_result.get('items', [])
         return events
+
+    def delete_event(self, calendarid: str = 'primary', eventid: str = None):
+        print(f'going to delete the event with ID {eventid}')
+        self.service.events().delete(calendarId=calendarid,
+                                     eventId=eventid) \
+            .execute()
 
     def create_event(self,
                      summary: str,
