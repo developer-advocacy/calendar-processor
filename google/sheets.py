@@ -50,7 +50,7 @@ class GoogleSheet(object):
             spreadsheetId=self.id, range=spreadsheet_range).execute()
         return result.get('values', [])
 
-    def __init__(self, credentials: str, spreadsheet_id: str):
+    def __init__(self, credentials: Credentials, spreadsheet_id: str):
         assert credentials is not None, 'the credentials must be valid'
         assert spreadsheet_id is not None, 'the spreadsheet_id must be valid'
         self.service: googleapiclient.discovery.Resource = build('sheets', 'v4',
