@@ -19,6 +19,19 @@ def get_current_month_dates() -> typing.Tuple[datetime.datetime, datetime.dateti
     return start_date, stop_date
 
 
+def parse_datetime(dt: typing.Union[str, datetime.datetime]) -> datetime.datetime:
+    if dt is None or dt.strip() == '':
+        return None
+
+    if isinstance(dt, str):
+        dt = dt.strip()
+        parts = [int(a.strip()) for a in dt.split('/')]
+        m, d, y = parts
+
+        return datetime.datetime(year=y, month=m, day=d)
+    return dt
+
+
 def parse_time(time: str) -> str:
     return __pad_time(__normalize_times(time))
 
@@ -30,6 +43,8 @@ def __pad_time(time: str) -> str:
     def pad_digit(d: str) -> str:
         if len(d) == 1:
             return f'0{d}'
+        if len(d) == 2:
+            return d
 
     if len(time) == 4:
         return time
@@ -68,6 +83,8 @@ def __normalize_times(time: str) -> str:
     keep = keep.strip()
     parts = keep.split(':')
     parts = [int(x.strip()) for x in parts]
+    if any([a is None for a in parts]):
+        return None
     if len(parts) == 2:
         return f'{parts[0]}:{parts[1]}'
     elif len(parts) == 1:
