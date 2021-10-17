@@ -30,7 +30,7 @@ jobs:
         with:
           python-version: 3.9
 
-      - name: Updates the remote profile page
-        run: hub --version && ./run.sh
+      - name: Run Synchronizer
+        run: ./run.sh
 
 

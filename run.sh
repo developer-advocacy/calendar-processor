@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 export CREDENTIALS_JSON_FN=$HOME/credentials.json
 export AUTHENTICATED_CREDENTIALS_JSON_FN=$HOME/authenticated-credentials.json
 
