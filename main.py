@@ -37,12 +37,21 @@ def main():
     my_sheet: sheets.GoogleSheet = sheets.GoogleSheet(credentials, sheet_id)
     my_calendar: calendar.GoogleCalendar = calendar.GoogleCalendar(credentials)
     start_date, stop_date = dt.get_current_month_dates()
-    rows = read_months_events(my_sheet, start_date, stop_date)
-    for row in rows:
-        print(row)
+    rows: list[Event] = read_months_events_from_sheet(my_sheet, start_date, stop_date)
+    write_calendar_entries(my_sheet, my_calendar, rows)
 
 
-def read_months_events(my_sheet, start_date, stop_date) -> typing.List[Event]:
+def write_calendar_entries(
+        my_sheet: sheets.GoogleSheet,
+        my_calendar: calendar.GoogleCalendar,
+        rows: list[Event]):
+    tz = pytz.timezone('America/Los_Angeles')
+    prefix = 'SHEET-SYNC: '
+    for event in rows:
+        print(event.event, prefix, event.event, event.start, event.time, tz)
+
+
+def read_months_events_from_sheet(my_sheet, start_date, stop_date) -> typing.List[Event]:
     def find_column(haystack: list[object], needle: str) -> int:
         ctr = 0
         for c in haystack[0]:

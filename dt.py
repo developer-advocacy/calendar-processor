@@ -1,5 +1,4 @@
 import datetime
-import os
 import typing
 
 
@@ -27,13 +26,25 @@ def parse_datetime(dt: typing.Union[str, datetime.datetime]) -> datetime.datetim
         dt = dt.strip()
         parts = [int(a.strip()) for a in dt.split('/')]
         m, d, y = parts
-
         return datetime.datetime(year=y, month=m, day=d)
     return dt
 
 
 def parse_time(time: str) -> str:
-    return __pad_time(__normalize_times(time))
+    result = __pad_time(__normalize_times(time))
+    parts = result.split(':')
+    assert len(parts) == 2, 'there must be only two parts!'
+    l, r = parts
+    if len(l) == 1:
+        l = f'0{l}'
+    if len(r) == 1:
+        r = f'{r}0'
+    result = f'{l}:{r}'
+    if result is None:
+        print('ERROR! the time can not be None!')
+        return '00:00'
+    assert len(result) == 5 , 'there must be five characters, total'
+    return result
 
 
 def __pad_time(time: str) -> str:
@@ -58,8 +69,13 @@ def __pad_time(time: str) -> str:
 
 
 def __normalize_times(time: str) -> str:
-    if time is None or time == '':
+    def fail_on_none(message: str) -> str:
+        print('ERROR! %s' % message)
         return None
+
+    if time is None or time == '':
+        return '00:00'
+
     assert time is not None, 'the time must be non-empty'
     time = time.lower().strip()
     if 'noon' in time:
@@ -84,8 +100,9 @@ def __normalize_times(time: str) -> str:
     parts = keep.split(':')
     parts = [int(x.strip()) for x in parts]
     if any([a is None for a in parts]):
-        return None
-    if len(parts) == 2:
+        return fail_on_none('there are parts that are None')
+    if len(parts) >= 2:
         return f'{parts[0]}:{parts[1]}'
     elif len(parts) == 1:
         return f'{parts[0]}'
+    return fail_on_none('reached the end and no time resolved')
