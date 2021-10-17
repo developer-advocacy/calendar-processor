@@ -66,18 +66,19 @@ def write_calendar_entries(
 
     # 1) figure out which calendar entries are _NOT_ in the new sheet entries and delete them
     for td in to_delete:
-        # print('need to delete ', td['id'], td['summary'], td['description'])
-        my_calendar.delete_event(eventid=td['id'])
+        to_delete_id = td['id']
+        my_calendar.delete_event(eventid=to_delete_id)
+        print('deleted', to_delete_id)
 
     # 2) write only the new sheet entries which are not in the existing calendar entries
     for tw in google_sheet_entries:
         if index.build_google_sheet_entry_index(tw) not in google_calendar_index.keys():
             e = my_calendar.create_event(tw.event, '', PREFIX, tw.start, tw.stop, tz)
-            print(e)
+            print('added', e['htmlLink'])
+            # print('added', f'"{tw.event}"', '@', tw.start, 'with link', e['htmlLink'])
 
 
 def find_google_calendar_entries(entries) -> typing.List[object]:
-
     def is_managed_google_calendar_entry(entry: typing.Dict) -> bool:
         key = 'description'
         return key in entry and PREFIX in entry[key]
