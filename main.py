@@ -75,16 +75,16 @@ def write_calendar_entries(
             my_calendar.delete_event(eventid=entry.get('id'))
 
     # then write them anew
-    if False:
-        for event in rows:
-            my_calendar.create_event(
-                event.event,
-                prefix,
-                '',
-                event.start,
-                event.stop,
-                tz
-            )
+    # if False:
+    for event in rows:
+        my_calendar.create_event(
+            event.event,
+            prefix,
+            '',
+            event.start,
+            event.stop,
+            tz
+        )
 
 
 def read_months_events_from_sheet(my_sheet, start_date, stop_date) -> typing.List[Event]:
