@@ -17,13 +17,29 @@ class Event(object):
 
     def __init__(self, event: str,
                  start: typing.Union[datetime.datetime, str],
-                 stop: typing.Union[datetime.datetime, str],
+                 # stop: typing.Union[datetime.datetime, str],
                  time: str) -> None:
         super().__init__()
+        self.stop = None
         self.event: str = event
         self.start: datetime.datetime = dt.parse_datetime(start)
-        self.stop: datetime.datetime = dt.parse_datetime(stop)
         self.time: str = dt.parse_time(time)
+        if self.time is not None and self.start is not None:
+            event = self
+            h, m = [int(a) for a in event.time.split(':')]
+            new_dt = datetime.datetime(
+                year=event.start.year,
+                month=event.start.month,
+                day=event.start.day,
+                minute=m,
+                hour=h
+            )
+            self.start = new_dt
+        if self.start is not None:
+            self.stop = self.start + datetime.timedelta(hours=1)
+            # print(
+            #     'the start is',self.start ,
+            #     'the stop is', self.stop)
 
 
 def main():
@@ -38,17 +54,37 @@ def main():
     my_calendar: calendar.GoogleCalendar = calendar.GoogleCalendar(credentials)
     start_date, stop_date = dt.get_current_month_dates()
     rows: list[Event] = read_months_events_from_sheet(my_sheet, start_date, stop_date)
-    write_calendar_entries(my_sheet, my_calendar, rows)
+    tz = pytz.timezone('America/Los_Angeles')
+    write_calendar_entries(start_date, stop_date, my_calendar, rows, tz)
 
 
 def write_calendar_entries(
-        my_sheet: sheets.GoogleSheet,
+        start_date: datetime.datetime,
+        stop_date: datetime.datetime,
         my_calendar: calendar.GoogleCalendar,
-        rows: list[Event]):
-    tz = pytz.timezone('America/Los_Angeles')
+        rows: list[Event],
+        tz: datetime.tzinfo):
     prefix = 'SHEET-SYNC: '
-    for event in rows:
-        print(event.event, prefix, event.event, event.start, event.time, tz)
+
+    # first reset all existing syncd entries
+    existing_calendar_entries = my_calendar.get_events_between(start_date, stop_date, tz)
+    for entry in existing_calendar_entries:
+        # print(entry)
+        location = entry.get('location')
+        if location == prefix:
+            my_calendar.delete_event(eventid=entry.get('id'))
+
+    # then write them anew
+    if False:
+        for event in rows:
+            my_calendar.create_event(
+                event.event,
+                prefix,
+                '',
+                event.start,
+                event.stop,
+                tz
+            )
 
 
 def read_months_events_from_sheet(my_sheet, start_date, stop_date) -> typing.List[Event]:
@@ -70,7 +106,7 @@ def read_months_events_from_sheet(my_sheet, start_date, stop_date) -> typing.Lis
     rows = [r for r in rows[1:]]
     rows = [r for r in rows if len(r) >= col_width]
     rows = [(row[event_header], row[start_date_header], row[stop_date_header], row[time_header]) for row in rows]
-    rows = [Event(event=x[0], start=x[1], stop=x[2], time=x[3]) for x in rows]
+    rows = [Event(event=x[0], start=x[1], time=x[3]) for x in rows]
     rows = [r for r in rows if r.start is not None]
     rows = [r for r in rows if start_date <= r.start < stop_date]  # this month only!
     return rows

@@ -57,10 +57,10 @@ class GoogleCalendar(object):
                      stopdatetime: datetime.datetime,
                      tz: typing.Union[datetime.tzinfo, str] = None
                      ):
-        ntz = None
+
         if tz is not None:
-            stopdatetime = stopdatetime.astimezone(ntz)
-            startdatetime = startdatetime.astimezone(ntz)
+            stopdatetime = stopdatetime.astimezone(tz)
+            startdatetime = startdatetime.astimezone(tz)
 
         event = {
             'summary': summary,
@@ -72,10 +72,7 @@ class GoogleCalendar(object):
                 'dateTime': startdatetime.isoformat(),
                 # 'timeZone': tz,
             },
-            'end': {
-                'dateTime': stopdatetime.isoformat(),
-                # 'timeZone': tz,
-            },
+
             # 'recurrence': [
             #     'RRULE:FREQ=DAILY;COUNT=2'
             # ],
@@ -92,5 +89,7 @@ class GoogleCalendar(object):
                 ],
             },
         }
+        if stopdatetime is not None:
+            event['end'] = {'dateTime': stopdatetime.isoformat()}
 
         return self.service.events().insert(calendarId='primary', body=event).execute()
