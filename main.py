@@ -8,39 +8,13 @@ import auth
 import dt
 from google import sheets, calendar
 import typing
+from event import Event
 
-
-class Event(object):
-
-    def __str__(self) -> str:
-        return f'start: {self.start} stop: {self.stop} time: {self.time} event: "{self.event}" '
-
-    def __init__(self, event: str,
-                 start: typing.Union[datetime.datetime, str],
-                 # stop: typing.Union[datetime.datetime, str],
-                 time: str) -> None:
-        super().__init__()
-        self.stop = None
-        self.event: str = event
-        self.start: datetime.datetime = dt.parse_datetime(start)
-        self.time: str = dt.parse_time(time)
-        if self.time is not None and self.start is not None:
-            event = self
-            h, m = [int(a) for a in event.time.split(':')]
-            new_dt = datetime.datetime(
-                year=event.start.year,
-                month=event.start.month,
-                day=event.start.day,
-                minute=m,
-                hour=h
-            )
-            self.start = new_dt
-        if self.start is not None:
-            self.stop = self.start + datetime.timedelta(hours=1)
-            # print(
-            #     'the start is',self.start ,
-            #     'the stop is', self.stop)
-
+'''
+This script automatically downloads everything from my travel spreadsheet, 
+then populates my private calendar with dummy calendar entries with reminders so that I 
+don't accidentally forget to participate in them
+'''
 
 def main():
     scopes: list = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/calendar']
@@ -68,10 +42,12 @@ def write_calendar_entries(
         tz: datetime.tzinfo):
     prefix = '::SHEET-CALENDAR-AUTO-SYNC::'
     existing_calendar_entries = my_calendar.get_events_between(start_date, stop_date, tz)
+
     for entry in existing_calendar_entries:
         description = entry.get('description')
         if description is not None and prefix in description:
             my_calendar.delete_event(eventid=entry.get('id'))
+
     for event in rows:
         my_calendar.create_event(
             event.event,
