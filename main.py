@@ -26,10 +26,9 @@ PREFIX = '::SHEET-CALENDAR-AUTO-SYNC::'
 
 def main():
     scopes: list = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/calendar']
-    desktop = os.path.join(os.environ['HOME'], 'Desktop', 'google-auth')
-    credentials = auth.authenticate(os.path.join(desktop, 'token.json'),
-                                    os.path.join(desktop, 'authenticated-token.json'),
-                                    scopes)
+    token_json_fn: str = os.environ['CREDENTIALS_JSON_FN']
+    authenticated_token_json_fn: str = os.environ['AUTHENTICATED_CREDENTIALS_JSON_FN']
+    credentials = auth.authenticate(token_json_fn, authenticated_token_json_fn, scopes)
     assert credentials is not None, 'the credentials must be valid!'
     sheet_id = os.environ['SHEET_ID']
     my_sheet: sheets.GoogleSheet = sheets.GoogleSheet(credentials, sheet_id)

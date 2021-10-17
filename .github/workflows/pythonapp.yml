@@ -2,6 +2,7 @@ name: Sheet to Calendar Processor
 
 env:
   CREDENTIALS_JSON: ${{ secrets.CREDENTIALS_JSON  }}
+  AUTHENTICATED_CREDENTIALS_JSON: ${{ secrets.AUTHENTICATED_CREDENTIALS_JSON  }}
 
 on:
   repository_dispatch:
