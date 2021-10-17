@@ -6,6 +6,8 @@ import pytz
 
 import auth
 import dt
+import index
+import event
 from google import sheets, calendar
 import typing
 from event import Event
@@ -13,8 +15,14 @@ from event import Event
 '''
 This script automatically downloads everything from my travel spreadsheet, 
 then populates my private calendar with dummy calendar entries with reminders so that I 
-don't accidentally forget to participate in them
+don't accidentally forget to participate in them.
+
+When I get back on the road I'm going to need to start worrying about the timezones again. Right now I'm assuming all times 
+in my calendar are in the same timezone as the events in my spreadsheet. Naturally.  
 '''
+
+PREFIX = '::SHEET-CALENDAR-AUTO-SYNC::'
+
 
 def main():
     scopes: list = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/calendar']
@@ -38,15 +46,49 @@ def write_calendar_entries(
         start_date: datetime.datetime,
         stop_date: datetime.datetime,
         my_calendar: calendar.GoogleCalendar,
-        rows: list[Event],
+        google_sheet_entries: list[Event],
         tz: datetime.tzinfo):
-    prefix = '::SHEET-CALENDAR-AUTO-SYNC::'
-    existing_calendar_entries = my_calendar.get_events_between(start_date, stop_date, tz)
+    google_calendar_entries = find_google_calendar_entries(
+        my_calendar.get_events_between(start_date, stop_date, tz))
+    google_calendar_index = {}
+    google_sheet_index = {}
 
-    for entry in existing_calendar_entries:
-        description = entry.get('description')
-        if description is not None and prefix in description:
-            my_calendar.delete_event(eventid=entry.get('id'))
+    for e in google_calendar_entries:
+        google_calendar_index[index.build_google_calendar_entry_index(e)] = e
+
+    for e in google_sheet_entries:
+        google_sheet_index[index.build_google_sheet_entry_index(e)] = e
+
+    to_delete = []
+    for key in google_calendar_index.keys():
+        if key not in google_sheet_index.keys():
+            to_delete.append(google_calendar_index[key])
+
+    # 1) figure out which calendar entries are _NOT_ in the new sheet entries and delete them
+    for td in to_delete:
+        # print('need to delete ', td['id'], td['summary'], td['description'])
+        my_calendar.delete_event(eventid=td['id'])
+
+    # 2) write only the new sheet entries which are not in the existing calendar entries
+    for tw in google_sheet_entries:
+        if index.build_google_sheet_entry_index(tw) not in google_calendar_index.keys():
+            e = my_calendar.create_event(tw.event, '', PREFIX, tw.start, tw.stop, tz)
+            print(e)
+
+
+def find_google_calendar_entries(entries) -> typing.List[object]:
+
+    def is_managed_google_calendar_entry(entry: typing.Dict) -> bool:
+        key = 'description'
+        return key in entry and PREFIX in entry[key]
+
+    return [a for a in entries if is_managed_google_calendar_entry(a)]
+
+
+# deprecated
+def reset_and_write(existing_calendar_entries, my_calendar, prefix, rows, tz):
+    for me in find_google_calendar_entries(existing_calendar_entries):
+        my_calendar.delete_event(eventid=me.get('id'))
 
     for event in rows:
         my_calendar.create_event(
