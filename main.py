@@ -64,14 +64,14 @@ def write_calendar_entries(
         my_calendar: calendar.GoogleCalendar,
         rows: list[Event],
         tz: datetime.tzinfo):
-    prefix = '::SHEET-CALENDAR-AUTO-SYNC:: '
+    prefix = '::SHEET-CALENDAR-AUTO-SYNC::'
 
     # first reset all existing syncd entries
     existing_calendar_entries = my_calendar.get_events_between(start_date, stop_date, tz)
     for entry in existing_calendar_entries:
         # print(entry)
         location = entry.get('location')
-        if location is not None and location == prefix:
+        if location is not None and prefix in location:
             my_calendar.delete_event(eventid=entry.get('id'))
 
     # then write them anew
