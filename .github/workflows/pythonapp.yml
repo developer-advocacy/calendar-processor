@@ -1,0 +1,34 @@
+name: Sheet to Calendar Processor
+
+env:
+  CREDENTIALS_JSON: ${{ secrets.CREDENTIALS_JSON  }}
+
+on:
+  repository_dispatch:
+    types: update-event
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '55 3 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - name: Install pipenv
+        uses: dschep/install-pipenv-action@v1
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+
+      - name: Updates the remote profile page
+        run: hub --version && ./run.sh
+
+
