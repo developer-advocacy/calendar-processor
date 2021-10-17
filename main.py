@@ -53,9 +53,11 @@ def main():
     my_sheet: sheets.GoogleSheet = sheets.GoogleSheet(credentials, sheet_id)
     my_calendar: calendar.GoogleCalendar = calendar.GoogleCalendar(credentials)
     start_date, stop_date = dt.get_current_month_dates()
-    rows: list[Event] = read_months_events_from_sheet(my_sheet, start_date, stop_date)
     tz = pytz.timezone('America/Los_Angeles')
+    print(f'starting synchronization @ {datetime.datetime.utcnow()}')
+    rows: list[Event] = read_months_events_from_sheet(my_sheet, start_date, stop_date)
     write_calendar_entries(start_date, stop_date, my_calendar, rows, tz)
+    print(f'finishing synchronization @ {datetime.datetime.utcnow()}')
 
 
 def write_calendar_entries(
@@ -65,21 +67,16 @@ def write_calendar_entries(
         rows: list[Event],
         tz: datetime.tzinfo):
     prefix = '::SHEET-CALENDAR-AUTO-SYNC::'
-
-    # first reset all existing syncd entries
     existing_calendar_entries = my_calendar.get_events_between(start_date, stop_date, tz)
     for entry in existing_calendar_entries:
-        # print(entry)
-        location = entry.get('location')
-        if location is not None and prefix in location:
+        description = entry.get('description')
+        if description is not None and prefix in description:
             my_calendar.delete_event(eventid=entry.get('id'))
-
-    # then write them anew
     for event in rows:
         my_calendar.create_event(
             event.event,
-            prefix,
             '',
+            prefix,
             event.start,
             event.stop,
             tz
