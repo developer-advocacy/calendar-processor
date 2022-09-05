@@ -31,6 +31,3 @@ class Event(object):
             self.start = new_dt
         if self.start is not None:
             self.stop = self.start + datetime.timedelta(hours=1)
-            # print(
-            #     'the start is',self.start ,
-            #     'the stop is', self.stop)

@@ -110,7 +110,7 @@ def read_months_events_from_sheet(my_sheet, start_date, stop_date) -> typing.Lis
             ctr += 1
         return -1
 
-    rows = my_sheet.read_values('A:X')
+    rows = my_sheet.read_values('Josh!A:X')
     event_header = find_column(rows, 'event')
     start_date_header = find_column(rows, 'start date')
     stop_date_header = find_column(rows, 'end date')
